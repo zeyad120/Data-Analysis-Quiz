@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Quiz Results</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Admin Dashboard</h1>
+            <button id="logoutBtn" class="logout-btn">Logout</button>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="dashboard-container">
+            <h2>Quiz Results</h2>
+            
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            
+            <div class="table-responsive">
+                <table id="resultsTable" class="results-table">
+                    <!-- Results will be loaded here by JavaScript -->
+                    <tr>
+                        <td>Loading results...</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3>Total Quizzes Completed</h3>
+                    <p id="totalQuizzes">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Average Score</h3>
+                    <p id="averageScore">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Highest Score</h3>
+                    <p id="highestScore">-</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
