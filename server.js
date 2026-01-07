@@ -1,21 +1,36 @@
 const express = require('express');
 const session = require('express-session');
+const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
-const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Enable CORS
+app.use(cors({
+    origin: [
+        'https://zeyad120.github.io',
+        'http://localhost:3000',
+        'https://website-2-nu-blue.vercel.app'
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
 // Middleware
-app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
-    secret: 'your-secret-key',
+    secret: 'your-secret-key', // In production, use environment variable
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } // Set to true if using HTTPS
+    saveUninitialized: false,
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        httpOnly: true
+    }
 }));
 
 // In-memory storage (in a real app, use a database)
@@ -136,7 +151,12 @@ app.get('/dashboard', isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+// Server configuration for both local and Vercel deployment
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
+
+// Export the Express API for Vercel
+module.exports = app;

@@ -1,7 +1,35 @@
+// API Configuration
+const API_BASE_URL = 'https://website-2-nu-blue.vercel.app';
+
 // DOM Elements
 const startQuizBtn = document.getElementById('startQuiz');
 const usernameInput = document.getElementById('username');
 const nameError = document.getElementById('nameError');
+
+// Helper function for API calls
+async function fetchAPI(endpoint, options = {}) {
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            credentials: 'include', // Important for sessions
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            },
+            body: options.body ? JSON.stringify(options.body) : undefined
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Something went wrong');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+}
 
 // Quiz data - This would normally come from the backend
 const quizData = {
@@ -345,24 +373,16 @@ async function handleAdminLogin(e) {
     const password = document.getElementById('password').value;
     
     try {
-        const response = await fetch('/api/admin/login', {
+        await fetchAPI('/api/admin/login', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username, password })
+            body: { username, password }
         });
         
-        const data = await response.json();
-        
-        if (response.ok) {
-            window.location.href = 'dashboard.html';
-        } else {
-            showError(data.error || 'Login failed. Please check your username and password.');
-        }
+        // If login is successful, redirect to dashboard
+        window.location.href = 'dashboard.html';
     } catch (error) {
         console.error('Login error:', error);
-        showError('An error occurred while trying to log in. Please try again.');
+        showError(error.message || 'Login failed. Please check your username and password.');
     }
 }
 
@@ -416,17 +436,11 @@ async function checkAdminAuth() {
 // Load dashboard data
 async function loadDashboard() {
     try {
-        const response = await fetch('/api/results');
-        const results = await response.json();
-        
-        if (response.ok) {
-            displayResults(results);
-        } else {
-            throw new Error('Failed to load results');
-        }
+        const results = await fetchAPI('/api/results');
+        displayResults(results);
     } catch (error) {
         console.error('Error loading dashboard:', error);
-        showError('An error occurred while loading results. Please refresh the page and try again.');
+        showError(error.message || 'Failed to load results. Please try again.');
     }
 }
 
