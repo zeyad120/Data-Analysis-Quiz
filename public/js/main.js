@@ -8,25 +8,44 @@ const nameError = document.getElementById('nameError');
 
 // Helper function for API calls
 async function fetchAPI(endpoint, options = {}) {
+    const defaultHeaders = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    };
+
     try {
+        console.log(`Making API call to: ${API_BASE_URL}${endpoint}`);
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
-            credentials: 'include', // Important for sessions
+            credentials: 'include', // Send cookies with the request
             headers: {
-                'Content-Type': 'application/json',
+                ...defaultHeaders,
                 ...options.headers
             },
             body: options.body ? JSON.stringify(options.body) : undefined
         });
+
+        console.log('Response status:', response.status);
+        
+        // Handle 204 No Content responses
+        if (response.status === 204) {
+            return null;
+        }
+
+        const data = await response.json().catch(() => ({}));
         
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Something went wrong');
+            console.error('API Error:', data);
+            throw new Error(data.error || data.message || 'Something went wrong');
         }
         
-        return await response.json();
+        return data;
     } catch (error) {
-        console.error('API Error:', error);
+        console.error('API Request Failed:', {
+            endpoint: `${API_BASE_URL}${endpoint}`,
+            error: error.message,
+            stack: error.stack
+        });
         throw error;
     }
 }

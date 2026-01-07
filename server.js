@@ -3,35 +3,61 @@ const session = require('express-session');
 const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Enable CORS
-app.use(cors({
+// Generate a secure random secret if not in production
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+
+// Trust first proxy (important for Vercel)
+app.set('trust proxy', 1);
+
+// Enable CORS with specific configuration
+const corsOptions = {
     origin: [
         'https://zeyad120.github.io',
         'http://localhost:3000',
-        'https://website-2-nu-blue.vercel.app'
+        'https://website-2-nu-blue.vercel.app',
+        'https://zeyad120.github.io/Data-Analysis-Quiz/'
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    exposedHeaders: ['set-cookie']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
 
 // Middleware
 app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({
-    secret: 'your-secret-key', // In production, use environment variable
+
+// Session configuration
+const sessionConfig = {
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { 
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        httpOnly: true
-    }
-}));
+    cookie: {
+        secure: true, // Required for HTTPS
+        httpOnly: true,
+        sameSite: 'none', // Required for cross-site cookies
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    },
+    // Use a simple in-memory store for demo (not for production)
+    store: new session.MemoryStore()
+};
+
+if (process.env.NODE_ENV === 'development') {
+    sessionConfig.cookie.secure = false; // For local development with HTTP
+    sessionConfig.cookie.sameSite = 'lax';
+}
+
+app.use(session(sessionConfig));
 
 // In-memory storage (in a real app, use a database)
 let quizResults = [];
