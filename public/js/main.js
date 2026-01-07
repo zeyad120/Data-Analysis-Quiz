@@ -389,41 +389,35 @@ async function handleAdminLogin(e) {
 // Handle admin logout
 async function handleAdminLogout() {
     try {
-        const response = await fetch('/api/admin/logout', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
+        await fetchAPI('/api/admin/logout', {
+            method: 'POST'
         });
-        
-        if (response.ok) {
-            window.location.href = 'admin.html';
-        }
+        // Always redirect to admin page after logout attempt
+        window.location.href = 'admin.html';
     } catch (error) {
         console.error('Logout error:', error);
+        // Still redirect even if there's an error
+        window.location.href = 'admin.html';
     }
 }
 
-// Check admin session
+// Check admin session (used on login page)
 async function checkAdminSession() {
     try {
-        const response = await fetch('/api/admin/check');
-        const data = await response.json();
-        
+        const data = await fetchAPI('/api/admin/check');
         if (data.isAuthenticated) {
             window.location.href = 'dashboard.html';
         }
     } catch (error) {
         console.error('Session check error:', error);
+        // Don't redirect on error - stay on login page
     }
 }
 
-// Check admin authentication
+// Check admin authentication (used on protected pages)
 async function checkAdminAuth() {
     try {
-        const response = await fetch('/api/admin/check');
-        const data = await response.json();
-        
+        const data = await fetchAPI('/api/admin/check');
         if (!data.isAuthenticated) {
             window.location.href = 'admin.html';
         }

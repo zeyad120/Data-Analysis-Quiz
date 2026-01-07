@@ -82,6 +82,13 @@ app.get('/api/results', isAuthenticated, (req, res) => {
     res.json(quizResults);
 });
 
+// Check admin session
+app.get('/api/admin/check', (req, res) => {
+    res.json({
+        isAuthenticated: !!req.session.isAuthenticated
+    });
+});
+
 // Admin login
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
@@ -117,12 +124,9 @@ app.post('/api/admin/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             console.error('Error destroying session:', err);
-            return res.status(500).json({ 
-                success: false, 
-                error: 'Error logging out. Please try again.' 
-            });
+            return res.status(500).json({ error: 'Error logging out' });
         }
-        res.clearCookie('connect.sid'); // Clear the session cookie
+        res.clearCookie('connect.sid');
         res.json({ 
             success: true, 
             message: 'Successfully logged out' 
