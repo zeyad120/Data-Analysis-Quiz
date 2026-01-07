@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
+const MemoryStore = require('memorystore')(session);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -42,20 +43,17 @@ const sessionConfig = {
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    store: new MemoryStore({
+        checkPeriod: 86400000 // Prune expired entries every 24 hours
+    }),
     cookie: {
-        secure: true, // Required for HTTPS
+        secure: process.env.NODE_ENV === 'production', // Required for HTTPS in production
         httpOnly: true,
-        sameSite: 'none', // Required for cross-site cookies
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    },
-    // Use a simple in-memory store for demo (not for production)
-    store: new session.MemoryStore()
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined
+    }
 };
-
-if (process.env.NODE_ENV === 'development') {
-    sessionConfig.cookie.secure = false; // For local development with HTTP
-    sessionConfig.cookie.sameSite = 'lax';
-}
 
 app.use(session(sessionConfig));
 
